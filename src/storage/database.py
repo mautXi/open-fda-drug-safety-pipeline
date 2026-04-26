@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS fact_adverse_events (
     num_reactions     SMALLINT,
     num_suspect_drugs SMALLINT
 );
-
 CREATE TABLE IF NOT EXISTS fact_recalls (
     recall_number          VARCHAR PRIMARY KEY,
     report_date            DATE,
@@ -42,7 +41,6 @@ CREATE TABLE IF NOT EXISTS fact_recalls (
     state                  VARCHAR,
     country                VARCHAR
 );
-
 CREATE TABLE IF NOT EXISTS dim_drugs (
     product_ndc          VARCHAR PRIMARY KEY,
     generic_name         VARCHAR,
@@ -56,7 +54,6 @@ CREATE TABLE IF NOT EXISTS dim_drugs (
     product_type         VARCHAR,
     application_number   VARCHAR
 );
-
 CREATE TABLE IF NOT EXISTS ingestion_log (
     endpoint         VARCHAR,
     ingested_at      TIMESTAMP DEFAULT now(),
@@ -65,37 +62,29 @@ CREATE TABLE IF NOT EXISTS ingestion_log (
 );
 """
 
+_PK = {
+    "fact_adverse_events": "event_id",
+    "fact_recalls": "recall_number",
+    "dim_drugs": "product_ndc",
+}
+
 
 def init(db_path: Path) -> duckdb.DuckDBPyConnection:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = duckdb.connect(str(db_path))
-    conn.executemany("", [])  # no-op to check connection
-    for statement in DDL.split(";"):
-        stmt = statement.strip()
-        if stmt:
-            conn.execute(stmt)
+    conn.execute(DDL)
     return conn
 
 
 def upsert(conn: duckdb.DuckDBPyConnection, table: str, df: pd.DataFrame) -> int:
     if df.empty:
         return 0
-    # Use INSERT OR REPLACE pattern via temp table
-    tmp = f"_tmp_{table}"
-    conn.register(tmp, df)
-    conn.execute(f"DELETE FROM {table} WHERE {_pk(table)} IN (SELECT {_pk(table)} FROM {tmp})")
-    conn.execute(f"INSERT INTO {table} SELECT * FROM {tmp}")
-    conn.unregister(tmp)
+    pk = _PK[table]
+    conn.register("_tmp", df)
+    conn.execute(f"DELETE FROM {table} WHERE {pk} IN (SELECT {pk} FROM _tmp)")
+    conn.execute(f"INSERT INTO {table} SELECT * FROM _tmp")
+    conn.unregister("_tmp")
     return len(df)
-
-
-def _pk(table: str) -> str:
-    pks = {
-        "fact_adverse_events": "event_id",
-        "fact_recalls": "recall_number",
-        "dim_drugs": "product_ndc",
-    }
-    return pks.get(table, "rowid")
 
 
 def log_ingestion(conn: duckdb.DuckDBPyConnection, endpoint: str, raw: int, loaded: int) -> None:
@@ -106,6 +95,4 @@ def log_ingestion(conn: duckdb.DuckDBPyConnection, endpoint: str, raw: int, load
 
 
 def query(conn: duckdb.DuckDBPyConnection, sql: str, params=None) -> pd.DataFrame:
-    if params:
-        return conn.execute(sql, params).df()
-    return conn.execute(sql).df()
+    return conn.execute(sql, params).df()

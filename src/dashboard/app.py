@@ -94,17 +94,6 @@ Use the sidebar to switch between pages.
 """
 )
 
-st.divider()
-st.subheader("Pipeline Commands")
-st.code(
-    "# Re-ingest fresh data (skips already-fetched years)\n"
-    "python pipeline.py ingest --years 3\n\n"
-    "# Re-transform after ingestion\n"
-    "python pipeline.py transform\n\n"
-    "# Force re-ingest a year: delete data/raw/adverse_events/2024.jsonl first",
-    language="bash",
-)
-
 # Show ingestion log
 try:
     log_df = conn.execute(

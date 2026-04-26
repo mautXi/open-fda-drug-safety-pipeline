@@ -2,7 +2,7 @@
 
 A self-contained data engineering pipeline and analytics dashboard that ingests FDA drug safety data, transforms it into analytics-ready tables, and surfaces insights through an interactive Streamlit application.
 
-> **Work in progress** — this project is under active development. Features and APIs may change.
+> **Work in progress**_ this project is under active development. Features and APIs may change.
 
 ---
 
@@ -88,7 +88,7 @@ Streamlit dashboard
 
 ## How ingestion works
 
-The openFDA API enforces a hard cap of 25,000 records per paginated query. To retrieve the complete dataset the pipeline splits every request into chunks small enough to stay under that cap, then fetches all chunks in parallel using `ThreadPoolExecutor`:
+The openFDA API enforces a hard cap of 25,000 records per paginated query. To retrieve the complete dataset the pipeline splits every request into chunks small enough to stay under that cap, then fetches all chunks in parallel:
 
 | Endpoint | Chunking strategy | Threads |
 |---|---|---|
@@ -96,9 +96,9 @@ The openFDA API enforces a hard cap of 25,000 records per paginated query. To re
 | NDC products | One query per calendar month, 1940 to present (~1,000 chunks) | 10 |
 | Recalls | Single paginated query (~18K records, fits under cap) | — |
 
-Raw data is written to `data/raw/` and cached — rerunning skips files that already exist. Pass `--force` to overwrite.
+Raw data is written to `data/raw/` and cached; rerunning skips files that already exist. Pass `--force` to overwrite.
 
-Many FAERS reports carry a `receivedate` of January 1st due to pharmaceutical companies batch-submitting at quarter boundaries. The pipeline fetches every day individually to capture these batches; the dashboard aggregates by year to reflect this correctly.
+Many FAERS reports carry a `receivedate` of January 1st due to pharmaceutical companies batch submitting at quarter boundaries. The pipeline fetches every day individually to capture these batches; the dashboard aggregates by year to reflect this correctly.
 
 ---
 
@@ -106,13 +106,14 @@ Many FAERS reports carry a `receivedate` of January 1st due to pharmaceutical co
 
 ### 1. Get a free API key
 
-Register at **https://open.fda.gov/apis/authentication/**. It takes 30 seconds and raises the rate limit from 1,000 req/day to 240 req/min.
+Register at **https://open.fda.gov/apis/authentication/**.It increases the rate limit from 1000 req/day to 240 req/min.
 
 ### 2. Clone the repository
 
 ```bash
 git clone <repo-url>
-cd openFDA
+cd open-fda-drug-safety-pipeline
+
 ```
 
 ### 3. Install dependencies
@@ -136,7 +137,7 @@ OPENFDA_API_KEY=your_actual_key_here
 ### 5. Run the pipeline
 
 ```bash
-# Quick test -- 1,000 records per endpoint, finishes in seconds
+# Quick test -- 1,000 records per endpoint
 python pipeline.py run --years 2 --sample
 
 # Full run -- fetches complete data for the last 2 years
@@ -180,5 +181,3 @@ python pipeline.py transform
 ## Data notes
 
 **Incremental updates:** Delete a `.jsonl` file in `data/raw/` and rerun `ingest` to refresh that endpoint. The `transform` step is always safe to rerun.
-
-**Full bulk downloads:** For the complete historical FAERS dataset (20M+ reports back to 2004), the FDA publishes quarterly bulk exports at https://fis.fda.gov/extensions/FPD-QDE-FAERS/FPD-QDE-FAERS.html.

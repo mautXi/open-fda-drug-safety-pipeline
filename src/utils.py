@@ -1,20 +1,6 @@
 import json
-import time
 from datetime import date, datetime
 from pathlib import Path
-from typing import Optional
-
-
-def safe_rename(src: Path, dst: Path, retries: int = 10, delay: float = 1.0) -> None:
-    """Rename with retries to handle Windows AV file locks."""
-    for attempt in range(retries):
-        try:
-            src.replace(dst)
-            return
-        except PermissionError:
-            if attempt == retries - 1:
-                raise
-            time.sleep(delay)
 
 
 def load_jsonl(raw_dir: Path, subdirectory: str) -> list[dict]:
@@ -34,7 +20,7 @@ def load_jsonl(raw_dir: Path, subdirectory: str) -> list[dict]:
     return records
 
 
-def parse_date(s) -> Optional[date]:
+def parse_date(s) -> date | None:
     if not s:
         return None
     s = str(s).strip()

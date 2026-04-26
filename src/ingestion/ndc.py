@@ -1,12 +1,12 @@
 import calendar
 import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date
+from functools import partial
 from pathlib import Path
 
 from rich.console import Console
 
-from ..utils import safe_rename
 from .client import OpenFDAClient
 
 console = Console()
@@ -15,10 +15,7 @@ MAX_WORKERS = 10
 
 
 def _fetch_chunk(client: OpenFDAClient, search: str) -> list[dict]:
-    records: list[dict] = []
-    for batch in client.paginate(ENDPOINT, search=search):
-        records.extend(batch)
-    return records
+    return [r for batch in client.paginate(ENDPOINT, search=search) for r in batch]
 
 
 def _month_chunks(today: date) -> list[str]:
@@ -34,49 +31,34 @@ def _month_chunks(today: date) -> list[str]:
     return chunks
 
 
-def ingest(client: OpenFDAClient, raw_dir: Path, force: bool = False) -> int:
+def ingest(client: OpenFDAClient, raw_dir: Path, force: bool = False, sample: bool = False) -> int:
     out_dir = raw_dir / "ndc"
     out_dir.mkdir(parents=True, exist_ok=True)
-
     out_path = out_dir / "products.jsonl"
+
     if out_path.exists() and not force:
-        with open(out_path) as f:
+        with out_path.open() as f:
             n = sum(1 for _ in f)
         console.print(f"  [yellow]Skip NDC ({n:,} records cached)[/yellow]")
-        return 0
+        return n
 
-    today = date.today()
-    chunks = _month_chunks(today)
-    console.print(f"  Fetching NDC: {len(chunks)} month chunks with {MAX_WORKERS} threads...")
-
-    tmp_path = out_path.with_suffix(".tmp")
-    count = 0
-
-    try:
-        with open(tmp_path, "w", encoding="utf-8") as f:
-            with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
-                futures = [pool.submit(_fetch_chunk, client, s) for s in chunks]
-                done = 0
-                for future in as_completed(futures):
-                    records = future.result()
-                    done += 1
-                    for r in records:
-                        f.write(json.dumps(r) + "\n")
-                    count += len(records)
-                    print(f"    {done}/{len(chunks)} chunks, {count:,} records", end="\r")
-    except Exception as exc:
-        tmp_path.unlink(missing_ok=True)
-        print()
-        console.print(f"  [red]Error fetching NDC: {exc}[/red]")
-        return 0
-
-    print()
-    safe_rename(tmp_path, out_path)
-
-    if count == 0:
-        out_path.unlink(missing_ok=True)
-        console.print("  [yellow]No NDC data returned[/yellow]")
+    if sample:
+        console.print("  NDC: sampling 1,000 records")
+        records, _ = client.fetch_page(ENDPOINT, "finished:true", limit=1000)
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.writelines(json.dumps(r) + "\n" for r in records)
+        count = len(records)
     else:
-        console.print(f"  [green]Saved {count:,} NDC products -> {out_path.name}[/green]")
+        chunks = _month_chunks(date.today())
+        console.print(f"  NDC: {len(chunks)} month chunks, {MAX_WORKERS} threads")
+        count = 0
+        with open(out_path, "w", encoding="utf-8") as f:
+            with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+                for i, records in enumerate(pool.map(partial(_fetch_chunk, client), chunks), 1):
+                    f.writelines(json.dumps(r) + "\n" for r in records)
+                    count += len(records)
+                    print(f"    {i}/{len(chunks)} chunks, {count:,} records", end="\r")
+        print()
 
+    console.print(f"  [green]Saved {count:,} NDC products -> {out_path.name}[/green]")
     return count

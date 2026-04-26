@@ -1,0 +1,10 @@
+.env
+.venv/
+data/raw/
+data/db/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+.ruff_cache/

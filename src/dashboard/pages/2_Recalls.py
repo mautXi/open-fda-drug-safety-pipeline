@@ -9,22 +9,15 @@ Recalls Monitor
 import sys
 from pathlib import Path
 
-import duckdb
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from src import config
+from src.dashboard.db import get_conn
 
 st.set_page_config(page_title="Recalls", page_icon="🚨", layout="wide")
-
-
-@st.cache_resource
-def get_conn():
-    if not config.DB_PATH.exists():
-        return None
-    return duckdb.connect(str(config.DB_PATH), read_only=True)
 
 
 @st.cache_data(ttl=300)

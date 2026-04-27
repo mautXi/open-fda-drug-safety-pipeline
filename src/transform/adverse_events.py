@@ -9,14 +9,12 @@ console = Console()
 
 
 def _drug_generic(drug: dict) -> str:
-    openfda = drug.get("openfda") or {}
-    names = openfda.get("generic_name") or []
+    names = (drug.get("openfda") or {}).get("generic_name") or []
     return str(names[0]).lower().strip() if names else clean(drug.get("medicinalproduct")).lower()
 
 
 def _drug_brand(drug: dict) -> str:
-    openfda = drug.get("openfda") or {}
-    brands = openfda.get("brand_name") or []
+    brands = (drug.get("openfda") or {}).get("brand_name") or []
     return str(brands[0]).strip() if brands else ""
 
 

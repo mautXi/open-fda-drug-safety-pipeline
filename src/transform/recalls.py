@@ -9,12 +9,12 @@ console = Console()
 
 
 def _class_num(classification: str) -> int | None:
-    if "Class I" in classification and "Class II" not in classification:
-        return 1
-    if "Class II" in classification and "Class III" not in classification:
-        return 2
     if "Class III" in classification:
         return 3
+    if "Class II" in classification:
+        return 2
+    if "Class I" in classification:
+        return 1
     return None
 
 

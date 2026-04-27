@@ -1,13 +1,12 @@
-import streamlit as st
-import duckdb
-import pandas as pd
-from pathlib import Path
 import sys
+from pathlib import Path
 
-# Add project root to path so imports resolve
+import streamlit as st
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src import config
+from src.dashboard.db import get_conn
 
 st.set_page_config(
     page_title="openFDA Analytics",
@@ -15,13 +14,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-
-@st.cache_resource
-def get_conn():
-    if not config.DB_PATH.exists():
-        return None
-    return duckdb.connect(str(config.DB_PATH), read_only=True)
 
 
 def table_counts(conn) -> dict:

@@ -19,16 +19,12 @@ def _fetch_chunk(client: OpenFDAClient, search: str) -> list[dict]:
 
 
 def _month_chunks(today: date) -> list[str]:
-    chunks = []
-    for year in range(1940, today.year + 1):
-        for month in range(1, 13):
-            if year == today.year and month > today.month:
-                break
-            last_day = calendar.monthrange(year, month)[1]
-            chunks.append(
-                f"finished:true AND marketing_start_date:[{year}{month:02d}01 TO {year}{month:02d}{last_day:02d}]"
-            )
-    return chunks
+    return [
+        f"finished:true AND marketing_start_date:[{year}{month:02d}01 TO {year}{month:02d}{calendar.monthrange(year, month)[1]:02d}]"
+        for year in range(1940, today.year + 1)
+        for month in range(1, 13)
+        if not (year == today.year and month > today.month)
+    ]
 
 
 def ingest(client: OpenFDAClient, raw_dir: Path, force: bool = False, sample: bool = False) -> int:

@@ -2,7 +2,7 @@
 
 A self-contained data engineering pipeline and analytics dashboard that ingests FDA drug safety data, transforms it into analytics-ready tables, and surfaces insights through an interactive Streamlit application.
 
-> **Work in progress**: this project is under active development. Features and APIs may change. (2026--)
+> **Work in progress**: this project is under active development. Features and APIs may change. (last *checked* working state of API endpoints 2026-05)
 
 ---
 

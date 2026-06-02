@@ -2,7 +2,7 @@
 
 A self-contained data engineering pipeline and analytics dashboard that ingests FDA drug safety data, transforms it into analytics-ready tables, and surfaces insights through an interactive Streamlit application.
 
-> **Work in progress**_ this project is under active development. Features and APIs may change.
+> **Work in progress**: this project is under active development. Features and APIs may change. (2026--)
 
 ---
 
@@ -20,9 +20,9 @@ This project pulls those datasets in full, flattens the deeply nested JSON, load
 
 **Dashboard pages:**
 
-1. **Adverse Events Explorer** — Year-over-year trends, top drugs by report count (colored by serious rate), top MedDRA reactions, PRR safety signal detection, reporter demographics, geographic breakdown
-2. **Recalls Monitor** — Timeline by hazard class (I/II/III), firm risk scoring (weighted by class severity), reason-for-recall categorization, active Class I recall table
-3. **Drug Explorer** — Search any drug to see its full safety profile (adverse events over time, top reactions, linked recalls); Drug Safety Landscape scatter that positions all drugs by report volume vs. seriousness rate
+1. **Adverse Events Explorer**: Year-over-year trends, top drugs by report count (colored by serious rate), top MedDRA reactions, PRR safety signal detection, reporter demographics, geographic breakdown
+2. **Recalls Monitor**: Timeline by hazard class (I/II/III), firm risk scoring (weighted by class severity), reason-for-recall categorization, active Class I recall table
+3. **Drug Explorer**: Search any drug to see its full safety profile (adverse events over time, top reactions, linked recalls); Drug Safety Landscape scatter that positions all drugs by report volume vs. seriousness rate
 
 ---
 
@@ -49,7 +49,7 @@ This project pulls those datasets in full, flattens the deeply nested JSON, load
 
 ### PRR safety signal detection
 
-The Adverse Events page includes a **Proportional Reporting Ratio (PRR)** calculator — the same statistical method used by regulators and pharmaceutical companies to detect safety signals in spontaneous reporting databases. A drug–reaction pair with PRR ≥ 2 and at least 3 reports is a conventional signal threshold.
+The Adverse Events page includes a **Proportional Reporting Ratio (PRR)** calculator. The same statistical method used by regulators and pharmaceutical companies to detect safety signals in spontaneous reporting databases. A drug reaction pair with PRR ≥ 2 and at least 3 reports is a conventional signal threshold.
 
 ---
 
